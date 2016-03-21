@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title></title>
+
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+
+    <!-- ionic/angularjs js -->
+    <script src="lib/ionic/js/ionic.bundle.js"></script>
+
+    <!-- cordova script (this will be a 404 during development) -->
+    <script src="cordova.js"></script>
+
+    <!-- your app's js -->
+    <script src="js/app.js"></script>
+    <script src="js/controller.js"></script>
+  </head>
+   <body ng-app="purusApp">
+    <ion-nav-view></ion-nav-view>
+
+    <script id="templates/menu.html" type="text/ng-template">
+        <ion-side-menus enable-menu-with-back-views="false">
+            <!--ion-side-menu-content-->
+            <ion-side-menu-content>
+                <ion-nav-view name="menuContent"></ion-nav-view>
+            </ion-side-menu-content>
+            <!--/ion-side-menu-content-->
+            <!--ion-side-menu-->
+            <ion-side-menu side="left">
+                <ion-header-bar class="bar-dark">
+                    <h1 class="title">快速导航</h1>
+                </ion-header-bar>
+                <ion-content class="has-header">
+                    <ion-list>
+                        <ion-item ui-sref="home.workitems({workItemType : '{{menu.WorkItem}}'})" class="item-icon-right" nav-clear menu-close ng-repeat="menu in menus">
+                            {{menu.name}}
+                            <span class="badge" ng-if="menu.badge>0">{{menu.badge}}</span>
+                            <i class="icon ion-chevron-right icon-accessory"></i>
+                        </ion-item>
+                        <ion-item ui-sref="home.messages" class="item-icon-right" nav-clear menu-close>
+                            新闻公告
+                            <i class="icon ion-chevron-right icon-accessory"></i>
+                        </ion-item>
+                    </ion-list>
+                </ion-content>
+            </ion-side-menu>
+            <!--/ion-side-menu-->
+        </ion-side-menus>
+    </script>
+
+    <script id="templates/WorkItems.html" type="text/ng-template">
+        <ion-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
+                <h1 class="title light">{{title}}</h1>
+                <button class="button button-icon button-clear ion-ios-search"></button>
+            </ion-header-bar>
+            <ion-content>
+                <ion-refresher on-refresh="doRefresh()"
+                               pulling-text="Pull to refresh..."
+                               refreshing-text="Refreshing!"
+                               refreshing-icon="ion-loading-b">
+                </ion-refresher>
+                <ion-list>
+                    <ion-item ng-repeat="item in WorkItems" ng-click="showDetail('{{item.TaskId}}','{{item.WorkItemId}}','{{item.ActivityId}}','{{item.ProcessId}}','{{item.FormId}}')">
+                        <h2>
+                            <span ng-show="workItemType!=='Draft'&&workItemType!=='MyRequest'">{{item.InitUserName}}-</span>
+                            {{item.TaskName}}
+                        </h2>
+                        <p class="padding-top">
+                            <span class="subdued pull-left">
+                                <span ng-show="workItemType==='Queue'"><i class="icon ion-android-person"></i> {{item.FromUserName}}</span>
+                                <span ng-show="workItemType==='MyRequest'||workItemType==='MyApprove'||workItemType==='MyRead'"><i class="icon ion-android-person"></i> {{item.CurUserName}}</span>
+                            </span>
+                            <span class="subdued pull-right">
+                                <i class="icon ion-android-time"></i> {{item.ReceiveTime}}
+                            </span>
+                        </p>
+                    </ion-item>
+                </ion-list>
+                <div class="padding" ng-show="!loadingCompleted">
+                    <button class="button button-block button-clear" ng-click="loadMore()">点击加载更多...</button>
+                </div>
+            </ion-content>
+        </ion-view>
+    </script>
+
+    <script id="templates/WorkItem.html" type="text/ng-template">
+        <ion-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <button class="button button-icon button-clear ion-ios-arrow-left" ng-click="goBack()"></button>
+                <h1 class="title light">任务详细</h1>
+                <button class="button button-icon button-clear ion-navicon"></button>
+            </ion-header-bar>
+            <ion-content>
+               
+            </ion-content>
+        </ion-view>
+    </script>
+
+    <script id="templates/Messages.html" type="text/ng-template">
+        <ion-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
+                <h1 class="title light">新闻公告</h1>
+                <button class="button button-icon button-clear ion-ios-search"></button>
+            </ion-header-bar>
+            <ion-content>
+                <ion-refresher on-refresh="doRefresh()"
+                               pulling-text="Pull to refresh..."
+                               refreshing-text="Refreshing!"
+                               refreshing-icon="ion-loading-b">
+                </ion-refresher>
+                <ion-list>
+                    <ion-item ng-repeat="item in Messages" ng-click="showDetail('{{item.MessageId}}')">
+                        <h2>
+                            {{item.Title}}
+                        </h2>
+                        <p class="padding-top">
+                            <span class="subdued pull-left">
+                                {{item.MsgType}}
+                            </span>
+                            <span class="subdued pull-right">
+                                {{item.SubmitUser}}发布于{{item.SubmitDate}}
+                            </span>
+                        </p>
+                    </ion-item>
+                </ion-list>
+                <div class="padding" ng-show="!loadingCompleted">
+                    <button class="button button-block button-clear" ng-click="loadMore()">点击加载更多...</button>
+                </div>
+            </ion-content>
+        </ion-view>
+    </script>
+
+    <script id="templates/Message.html" type="text/ng-template">
+        <ion-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <button class="button button-icon button-clear ion-ios-arrow-left" ng-change="goBack()"></button>
+                <h1 class="title light">新闻详细</h1>
+            </ion-header-bar>
+            <ion-content>
+                <div class="padding">
+                    <h4>{{Message.Title}}</h4>
+                    <p style="color:#666;font-size:small;">
+                        <b>类型:</b>{{Message.MsgType}}
+                        <b>日期:</b>{{Message.SubmitDate}}
+                        <b>有效期:</b>{{Message.Duration}}天
+                    </p>
+                    <p ng-bind-html="Message.TrustedContent"></p>
+                </div>
+            </ion-content>
+        </ion-view>
+    </script>
+</body>
+</html>
