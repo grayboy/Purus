@@ -14,6 +14,11 @@
 
     <!-- ionic/angularjs js -->
     <script src="lib/ionic/js/ionic.bundle.js"></script>
+    
+    <!-- moment/moment js -->
+    <script src="/lib/moment/moment.js"></script>
+    <script src="/lib/moment/angular-moment.js"></script>
+    <script src="/lib/moment/locale/zh-cn.js"></script>
 
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
@@ -34,11 +39,13 @@
             <!--/ion-side-menu-content-->
             <!--ion-side-menu-->
             <ion-side-menu side="left">
-                <ion-header-bar class="bar-dark">
-                    <h1 class="title">快速导航</h1>
-                </ion-header-bar>
-                <ion-content class="has-header">
+                <ion-content scroll="false" overflow-scroll="false">>
                     <ion-list>
+                       <ion-item class="item item-avatar item-positive" href="#">
+                          <img src="/images/avata.png">
+                          <h2 class="light">Purus</h2>
+                          <a class="light">欢迎您：熊伟军</a>
+                        </ion-item>
                         <ion-item ui-sref="home.workitems({workItemType : '{{menu.WorkItem}}'})" class="item-icon-right" nav-clear menu-close ng-repeat="menu in menus">
                             {{menu.name}}
                             <span class="badge" ng-if="menu.badge>0">{{menu.badge}}</span>
@@ -80,7 +87,7 @@
                                 <span ng-show="workItemType==='MyRequest'||workItemType==='MyApprove'||workItemType==='MyRead'"><i class="icon ion-android-person"></i> {{item.CurUserName}}</span>
                             </span>
                             <span class="subdued pull-right">
-                                <i class="icon ion-android-time"></i> {{item.ReceiveTime}}
+                                <i class="icon ion-android-time"></i>  <span am-time-ago="item.ReceiveTime"></span>
                             </span>
                         </p>
                     </ion-item>
@@ -128,7 +135,7 @@
                                 {{item.MsgType}}
                             </span>
                             <span class="subdued pull-right">
-                                {{item.SubmitUser}}发布于{{item.SubmitDate}}
+                                {{item.SubmitUser}}发布于<span am-time-ago="item.ReceiveTime"></span>
                             </span>
                         </p>
                     </ion-item>
