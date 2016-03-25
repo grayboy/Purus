@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
     <title></title>
@@ -11,40 +11,50 @@
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
     -->
-
     <!-- ionic/angularjs js -->
+    <script src="lib/jquery/dist/jquery.min.js"></script>
     <script src="lib/ionic/js/ionic.bundle.js"></script>
-    
+
     <!-- moment/moment js -->
-    <script src="/lib/moment/moment.js"></script>
-    <script src="/lib/moment/angular-moment.js"></script>
-    <script src="/lib/moment/locale/zh-cn.js"></script>
+    <script src="lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="lib/angular-moment/angular-moment.min.js"></script>
 
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
 
     <!-- your app's js -->
     <script src="js/app.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/services.js"></script>
     <script src="js/controller.js"></script>
-  </head>
-   <body ng-app="purusApp">
+</head>
+<body ng-app="purus">
     <ion-nav-view></ion-nav-view>
+    <ion-nav-bar class="bar-positive">
+        <ion-nav-back-button></ion-nav-back-button>
+    </ion-nav-bar>
 
     <script id="templates/menu.html" type="text/ng-template">
         <ion-side-menus enable-menu-with-back-views="false">
             <!--ion-side-menu-content-->
             <ion-side-menu-content>
+                <ion-nav-bar class="bar-positive">
+                    <ion-nav-back-button></ion-nav-back-button>
+                    <ion-nav-buttons side="left">
+                        <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
+                    </ion-nav-buttons>
+                </ion-nav-bar>
                 <ion-nav-view name="menuContent"></ion-nav-view>
             </ion-side-menu-content>
             <!--/ion-side-menu-content-->
             <!--ion-side-menu-->
             <ion-side-menu side="left">
-                <ion-content scroll="false" overflow-scroll="false">>
+                <ion-content scroll="false" overflow-scroll="false" class="no-header">
                     <ion-list>
-                       <ion-item class="item item-avatar item-positive" href="#">
-                          <img src="/images/avata.png">
-                          <h2 class="light">Purus</h2>
-                          <a class="light">欢迎您：熊伟军</a>
+                        <ion-item class="item item-avatar item-positive" href="#">
+                            <img src="img/avata.png">
+                            <h2 class="light">Purus</h2>
+                            <a class="light">欢迎您：{{loginUser}}</a>
                         </ion-item>
                         <ion-item ui-sref="home.workitems({workItemType : '{{menu.WorkItem}}'})" class="item-icon-right" nav-clear menu-close ng-repeat="menu in menus">
                             {{menu.name}}
@@ -63,20 +73,21 @@
     </script>
 
     <script id="templates/WorkItems.html" type="text/ng-template">
-        <ion-view>
-            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
-                <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
-                <h1 class="title light">{{title}}</h1>
-                <button class="button button-icon button-clear ion-ios-search"></button>
-            </ion-header-bar>
+        <ion-view title="{{title}}">
+            <ion-nav-buttons side="right">
+                <button class="button button-icon button-clear ion-ios-search" ng-click="openWorkItemsSearchModal()"></button>
+            </ion-nav-buttons>
             <ion-content>
                 <ion-refresher on-refresh="doRefresh()"
                                pulling-text="Pull to refresh..."
                                refreshing-text="Refreshing!"
-                               refreshing-icon="ion-loading-b">
+                               spinner="ios-small">
                 </ion-refresher>
                 <ion-list>
-                    <ion-item ng-repeat="item in WorkItems" ng-click="showDetail('{{item.TaskId}}','{{item.WorkItemId}}','{{item.ActivityId}}','{{item.ProcessId}}','{{item.FormId}}')">
+                    <ion-item collection-repeat="item in WorkItems"
+                              collection-item-width="'100%'"
+                              collection-item-height="'80px'"
+                              ng-click="showDetail(item.TaskId,item.WorkItemId,item.ActivityId,item.ProcessId,item.FormId)">
                         <h2>
                             <span ng-show="workItemType!=='Draft'&&workItemType!=='MyRequest'">{{item.InitUserName}}-</span>
                             {{item.TaskName}}
@@ -99,34 +110,139 @@
         </ion-view>
     </script>
 
-    <script id="templates/WorkItem.html" type="text/ng-template">
-        <ion-view>
-            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
-                <button class="button button-icon button-clear ion-ios-arrow-left" ng-click="goBack()"></button>
-                <h1 class="title light">任务详细</h1>
-                <button class="button button-icon button-clear ion-navicon"></button>
+    <script id="templates/WorkItemsSearchModal.html" type="text/ng-template">
+        <ion-modal-view>
+            <ion-header-bar class="bar bar-header bar-positive item-input-inset" align-title="center">
+                <form class="item-input-wrapper" ng-submit="doSearch()">
+                    <i class="icon ion-ios-search placeholder-icon"></i>
+                    <input type="search" placeholder="keyword" ng-model="vm.filter">
+                </form>
+                <button class="button button-clear" ng-click="closeWorkItemsSearchModal()">取消</button>
             </ion-header-bar>
+            <ion-content class="has-header">
+                <ion-list>
+                    <ion-item class="item-divider" ng-click="closeWorkItemsSearchModal()">
+                        搜索历史
+                    </ion-item>
+                    <ion-item collection-repeat="item in History"
+                              collection-item-width="'101%'"
+                              collection-item-height="'52px'"
+                              ng-click="doSearch(item.TaskId,item.WorkItemId,item.ActivityId,item.ProcessId,item.FormId)">
+                        <h2>
+                            {{item}}
+                        </h2>
+                    </ion-item>
+                </ion-list>
+            </ion-content>
+        </ion-modal-view>
+    </script>
+
+    <script id="templates/WorkItem.html" type="text/ng-template">
+        <ion-view title="任务详细">
+            <ion-nav-buttons side="left">
+                <button class="button button-icon button-clear ion-ios-arrow-left" ng-click="goBack()"></button>
+            </ion-nav-buttons>
+            <ion-nav-buttons side="right">
+                <button class="button button-icon button-clear ion-navicon" ng-click="showAction($event)"></button>
+            </ion-nav-buttons>
             <ion-content>
-               
+                <div ng-bind-html="formHtml"></div>
             </ion-content>
         </ion-view>
     </script>
 
-    <script id="templates/Messages.html" type="text/ng-template">
+    <script id="templates/WorkitemPopover.html" type="text/ng-template">
+        <ion-popover-view>
+            <ion-content>
+                <ion-list>
+                    <ion-item class="item-icon-left" ng-click="taskTrace()">
+                        <i class="icon ion-ios-eye icon-accessory"></i>任务跟踪
+                    </ion-item>
+                    <ion-item class="item-icon-left">
+                        <i class="icon ion-reply icon-accessory"></i>任务退回
+                    </ion-item>
+                </ion-list>
+            </ion-content>
+        </ion-popover-view>
+    </script>
+
+    <script id="templates/TaskTrace.html" type="text/ng-template">
         <ion-view>
             <ion-header-bar class="bar bar-header bar-positive" align-title="center">
-                <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
-                <h1 class="title light">新闻公告</h1>
-                <button class="button button-icon button-clear ion-ios-search"></button>
+                <button class="button button-icon button-clear ion-ios-arrow-left" ng-click="goBack()"></button>
+                <h1 class="title light">任务跟踪</h1>
             </ion-header-bar>
-            <ion-content>
+            <ion-content scroll="true" overflow-scroll="true">
+                <ul class="timeline">
+                    <li ng-repeat="item in TaskTraces">
+                        <div class="timeline-thumb bg-color-blue timeline-icon">
+                            <i class="ion-android-time"></i>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>
+                                {{item.ActivityName}}-{{item.ActionUserName}}
+                                <span class="pull-right padding-right">{{item.Result}}</span>
+                            </h4>
+                            <p>{{item.Remark}}</p>
+                            <div class="timeline-stats">
+                                <i class="ion-heart"></i> <span am-time-ago="item.ReceiveTime"></span>
+                                <span class="pos-absolute-right" ng-if="item.FinishTime!==''">
+                                    <i class="ion-ios-clock"></i>
+                                    <span am-time-ago="item.FinishTime"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </ion-content>
+        </ion-view>
+    </script>
+
+    <script id="templates/TaskTraceModal.html" type="text/ng-template">
+        <ion-modal-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <h1 class="title light">任务跟踪</h1>
+                <button class="button button-icon button-clear ion-ios-close-empty" ng-click="closeTaskTraceModal()"></button>
+            </ion-header-bar>
+            <ion-content scroll="true" overflow-scroll="true">
+                <ul class="timeline">
+                    <li ng-repeat="item in TaskTraces">
+                        <div class="timeline-thumb bg-color-blue timeline-icon">
+                            <i class="ion-android-time"></i>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>
+                                {{item.ActivityName}}-{{item.ActionUserName}}
+                                <span class="pull-right padding-right">{{item.Result}}</span>
+                            </h4>
+                            <p>{{item.Remark}}</p>
+                            <div class="timeline-stats">
+                                <i class="ion-heart"></i> <span am-time-ago="item.ReceiveTime"></span>
+                                <span class="pos-absolute-right" ng-if="item.FinishTime!==''">
+                                    <i class="ion-ios-clock"></i>
+                                    <span am-time-ago="item.FinishTime"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </ion-content>
+        </ion-modal-view>
+    </script>
+
+    <script id="templates/Messages.html" type="text/ng-template">
+        <ion-view title="新闻公告">
+            <ion-content class="has-header">
                 <ion-refresher on-refresh="doRefresh()"
                                pulling-text="Pull to refresh..."
                                refreshing-text="Refreshing!"
-                               refreshing-icon="ion-loading-b">
+                               spinner="ios-small">
                 </ion-refresher>
                 <ion-list>
-                    <ion-item ng-repeat="item in Messages" ng-click="showDetail('{{item.MessageId}}')">
+                    <ion-item collection-repeat="item in Messages"
+                              collection-item-width="'100%'"
+                              collection-item-height="'80px'"
+                              ng-click="showDetail(item.MessageId)">
                         <h2>
                             {{item.Title}}
                         </h2>
@@ -135,7 +251,7 @@
                                 {{item.MsgType}}
                             </span>
                             <span class="subdued pull-right">
-                                {{item.SubmitUser}}发布于<span am-time-ago="item.ReceiveTime"></span>
+                                {{item.SubmitUser}}发布于<span am-time-ago="item.SubmitDate"></span>
                             </span>
                         </p>
                     </ion-item>
@@ -148,21 +264,53 @@
     </script>
 
     <script id="templates/Message.html" type="text/ng-template">
-        <ion-view>
-            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
-                <button class="button button-icon button-clear ion-ios-arrow-left" ng-change="goBack()"></button>
-                <h1 class="title light">新闻详细</h1>
-            </ion-header-bar>
-            <ion-content>
+        <ion-view title="新闻详细">
+            <ion-nav-buttons side="left">
+                <button class="button button-icon button-clear ion-ios-arrow-left" ng-click="goBack()"></button>
+            </ion-nav-buttons>
+            <ion-content class="has-header">
                 <div class="padding">
                     <h4>{{Message.Title}}</h4>
                     <p style="color:#666;font-size:small;">
                         <b>类型:</b>{{Message.MsgType}}
-                        <b>日期:</b>{{Message.SubmitDate}}
+                        <b>日期:</b><span am-time-ago="Message.SubmitDate"></span>
                         <b>有效期:</b>{{Message.Duration}}天
                     </p>
                     <p ng-bind-html="Message.TrustedContent"></p>
                 </div>
+            </ion-content>
+        </ion-view>
+    </script>
+
+    <script id="templates/Login.html" type="text/ng-template">
+        <ion-view>
+            <ion-header-bar class="bar bar-header bar-positive" align-title="center">
+                <h1 class="title light">登录</h1>
+            </ion-header-bar>
+            <ion-content>
+                <div class="padding text-center" href="#">
+                    <div class="img">
+                        <img ng-src="img/ionic.png" style="width:65px;height:65px;">
+                    </div>
+                    <div class="logo">
+                        Purus
+                    </div>
+                </div>
+                <ng-form name="loginForm">
+                    <div class="list">
+                        <label class="item item-input">
+                            <span class="input-label">用户名：</span>
+                            <input type="text" ng-model="vm.account" name="account" ng-required="true">
+                        </label>
+                        <label class="item item-input">
+                            <span class="input-label">用户密码：</span>
+                            <input type="password" ng-model="vm.password" name="password" ng-required="true">
+                        </label>
+                        <div class="padding">
+                            <button class="button button-block button-positive" ng-disabled="loginForm.$invalid" ng-click="doLogin()" type="button">登录</button>
+                        </div>
+                    </div>
+                </ng-form>
             </ion-content>
         </ion-view>
     </script>
